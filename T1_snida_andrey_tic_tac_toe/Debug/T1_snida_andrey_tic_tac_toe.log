@@ -1,3 +1,0 @@
-﻿  Source.cpp
-C:\Users\andry\source\repos\T1_snida_andrey_tic_tac_toe\Source.cpp(34): warning C4715: read_matrix: значение возвращается не при всех путях выполнения
-  T1_snida_andrey_tic_tac_toe.vcxproj -> C:\Users\andry\source\repos\T1_snida_andrey_tic_tac_toe\Debug\T1_snida_andrey_tic_tac_toe.exe
