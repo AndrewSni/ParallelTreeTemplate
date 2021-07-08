@@ -1,13 +1,17 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include "Header.h"
 
 using namespace std;
 
+//Чтение матрицы из файла. Матрица храниться в первозданном виде матрицы
+//Первыми читаются размерности матрицы
+//Далее создается матрица с отступами и заполняется значениями из файла
+//input: filename - имя файла, padding - отступы матрицы, M и N - пустые переменные для размерности матрицы
+//output: matrix - матрица с отступами, M и N - переменные для размерности матрицы
 int** buildMatrix(string filename, int padding, int& M, int& N)
 {
-    ifstream fin("input.txt");
+    ifstream fin(filename);
     if (!fin.is_open()) { exit(0); }
     cin.rdbuf(fin.rdbuf());
 
@@ -29,8 +33,16 @@ int** buildMatrix(string filename, int padding, int& M, int& N)
     }
     return matrix;
 }
-        
-void MoveController(int** matrix, int padding, int M, int N, int tac_toe, int &row, int &col) {
+
+
+//Созданная ранее матрица проверятся в три этапа:
+// 1м этапом проверяется случай победы в 1 ход для х
+// 2м этапом проверяется случай победы в 1 ход для о
+// 3м этапом проверяется случай победы в 2 хода для х
+// input: matrix - матрица с отсупами, padding - отступы матрицы, M и N - переменные для размерности матрицы
+// tac_toe - значение текущей фигуры, row  и col - столбцы и колонки текущего хода 
+// output: row  и col - позиция победного хода или правый нижний край матрицы если такого хода нет
+void MoveController(int** matrix, int padding, int M, int N, int tac_toe, int& row, int& col) {
     for (int i = padding / 2; i < M + padding * 2 - padding / 2; i++)
     {
         for (int j = padding / 2; j < N + padding * 2 - padding / 2; j++)
@@ -41,53 +53,77 @@ void MoveController(int** matrix, int padding, int M, int N, int tac_toe, int &r
                 col = j - padding / 2;
                 matrix[i][j] = tac_toe;
                 if (fiveInRow(matrix, padding, 2, i, j))
-                {
-                    matrix[i][j] = 9;
-                    for (int s = padding / 2; s < N + padding * 2 - padding / 2; s++) {
-                        for (int ss = padding / 2; ss < M + padding * 2 - padding / 2; ss++) {
-                            cout << matrix[s][ss] << " ";
+                {   
+                    matrix[i][j] = 2;
+                    for (int s = padding / 2; s < M + padding * 2 - padding / 2; s++)
+                    {
+                        for (int ss = padding / 2; ss < N + padding * 2 - padding / 2; ss++)
+                        {
+                            cout << matrix[s][ss];
                         }
                         cout << endl;
-                    }                   
+                    }
+                    matrix[i][j] = 2;
                     return;
                 }
                 matrix[i][j] = 0;
             }
         }
     }
-    for (int i = padding/2; i < M + padding * 2 - padding / 2; i++)
+    for (int i = padding / 2; i < M + padding * 2 - padding / 2; i++)
     {
-        for (int j = padding/2; j < N + padding * 2 - padding / 2; j++)
+        for (int j = padding / 2; j < N + padding * 2 - padding / 2; j++)
         {
-            if (matrix[i][j] == 0) 
+            if (matrix[i][j] == 0)
             {
-                row = i - padding/2;
-                col = j - padding/2;
+                row = i - padding / 2;
+                col = j - padding / 2;
                 matrix[i][j] = tac_toe;
-                
                 if (fiveInRow(matrix, padding, 1, i, j))
                 {
                     return;
                 }
+                matrix[i][j] = 0;
+            }
+        }
+    }
+
+    for (int i = padding / 2; i < M + padding * 2 - padding / 2; i++)
+    {
+        for (int j = padding / 2; j < N + padding * 2 - padding / 2; j++)
+        {
+            if (matrix[i][j] == 0)
+            {
+                row = i - padding / 2;
+                col = j - padding / 2;
+                matrix[i][j] = tac_toe;
+
                 if (isSecondMove(matrix, padding, M, N, i, j))
-                {   
+                {
                     matrix[i][j] = 9;
-                    for (int s = padding / 2; s < N + padding * 2- padding / 2; s++) {
-                        for (int ss = padding / 2; ss < M + padding * 2- padding / 2; ss++) {
-                           cout<< matrix[s][ss]<<" ";
+                    for (int s = padding / 2; s < M + padding * 2 - padding / 2; s++)
+                    {
+                        for (int ss = padding / 2; ss < N + padding * 2 - padding / 2; ss++)
+                        {
+                            cout << matrix[s][ss]<<" ";
                         }
                         cout << endl;
                     }
                     matrix[i][j] = 0;
                     return;
                 }
-                matrix[i][j] = 0;             
+                matrix[i][j] = 0;
             }
         }
     }
-
     return;
 }
+
+// Функция для проверки в один ход для любой фигуры
+// проверяется есть ли 4 фигуры в ряд
+// input: matrix - матрица с отсупами, shift_row и shift_col - коэффициенты смещения по клеткам матрицы
+// tac_toe - значение текущей фигуры, row  и col - столбцы и колонки текущего хода 
+// output: bool можно ли выиграть
 bool canIWin(int** matrix, int tac_toe, int row, int col,int shift_row, int shift_col)
 {
     int counter_of_figures = 1;
@@ -112,6 +148,11 @@ bool canIWin(int** matrix, int tac_toe, int row, int col,int shift_row, int shif
     }
     return false;
 }
+
+// Проверка 4 в ряд по горизонтали и вертикали и по двум диагоналям
+// input: matrix - матрица с отсупами, padding - отступы матрицы
+// tac_toe - значение текущей фигуры, row  и col - столбцы и колонки текущего хода 
+// output: bool можно ли победить в один ход
 bool fiveInRow(int** matrix, int padding, int tac_toe,int row,int col) {
     //Block Горизонталь
     if(canIWin(matrix, tac_toe, row, col ,0 ,1))
@@ -139,6 +180,11 @@ bool fiveInRow(int** matrix, int padding, int tac_toe,int row,int col) {
     return false;
 }
 
+
+// Проверка оганичена ли линия с какой либо стороны линия х единицой
+// input: matrix - матрица с отсупами, , shift_row и shift_col - коэффициенты смещения по клеткам матрицы
+// tac_toe - значение текущей фигуры, row  и col - столбцы и колонки текущего хода 
+// output: bool можно ли победить в один ход
 bool isClosedRow(int** matrix, int row, int col,int shift_row, int shift_col) {
 
     int d_col = col + shift_col;
@@ -188,6 +234,10 @@ bool isClosedRow(int** matrix, int row, int col,int shift_row, int shift_col) {
     return false;
 }
 
+// Проверка есть ли открытая тройка х или 2 закрытые тройки из одной клетки с учетом пробелов (допускается только 1)
+// input: matrix - матрица с отсупами, , shift_row и shift_col - коэффициенты смещения по клеткам матрицы
+// fourCounter - количсество четверок(2 закрытых или 1 открытая после 1 го хода), row  и col - столбцы и колонки текущего хода 
+// output: bool есть ли четверка удовлетворяющая условиям
 bool checkQuad(int** matrix, int row, int col, int shift_row, int shift_col, int &fourCounter)
 {
     int counter_of_figures = 1;
@@ -240,16 +290,13 @@ bool checkQuad(int** matrix, int row, int col, int shift_row, int shift_col, int
         }
     }
 
-    if (!isClosedRow(matrix, row, col, shift_row, shift_col))
+    if (isClosedRow(matrix, row, col, shift_row, shift_col) and counterLeftF==0 and counterRightF==0)
     {
-        if (counter_of_figures + counterLeftF > 4)
+        if (counter_of_figures > 4)
         {
             return true;
         }
-        if (counter_of_figures + counterRightF > 4)
-        {
-            return true;
-        }
+
     }
     else {
         if (counter_of_figures + counterLeftF >= 4 and counter_of_figures < 4)
@@ -273,6 +320,10 @@ bool checkQuad(int** matrix, int row, int col, int shift_row, int shift_col, int
     return false;
 }
 
+// Проверка есть ли открытая тройка х или 2 закрытые тройки из одной клетки с учетом пробелов (допускается только 1)
+// input: matrix - матрица с отсупами, , shift_row и shift_col - коэффициенты смещения по клеткам матрицы
+// padding - отступы матрицы, M и N - переменные для размерности матрицы, row  и col - столбцы и колонки текущего хода 
+// output: bool есть ли четверка удовлетворяющая условиям
 bool isSecondMove(int** matrix, int padding, int M, int N, int row, int col) {
     int fourCounter = 0;
     int counter_of_figures = 1;
